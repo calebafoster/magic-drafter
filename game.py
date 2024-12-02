@@ -13,6 +13,7 @@ class Game:
         self.state = 'commander_choice'
 
         self.picker = Picker('commander-oracle-cards.json')
+        self.commander_surf = None
 
         self.choice = None
         self.deck = []
@@ -47,6 +48,9 @@ class Game:
                 sprite_group.append(card_img)
 
             self.display_surface.blit(card_img.image, card_img.rect.topleft)
+
+            if self.commander_surf:
+                self.display_surface.blit(self.commander_surf.image, self.commander_surf.rect.topleft)
 
         run = True
         while run:
@@ -87,19 +91,28 @@ class Game:
 
             self.display_surface.fill('black')
 
+
             self.deck_count = len(self.deck)
 
             if self.state == 'commander_choice':
                 self.present_choices(self.picker.get_commander_choices(6))
                 self.deck.append(self.choice)
+
+                self.commander = self.choice
+                self.commander_surf = Card((1000,0), self.choice['image_uris']['png'])
+
                 self.color_identity = self.choice['color_identity']
-                print(self.color_identity)
-                print(self.deck)
+
+                self.display_surface.blit(self.commander_surf.image, self.commander_surf.rect.topleft)
+
                 self.state = 'nonland_choice'
 
             elif self.state == 'nonland_choice' and self.deck_count < 60 - 24:
                 self.present_choices(self.picker.get_nonlands(self.color_identity))
                 self.deck.append(self.choice)
+
+                self.display_surface.blit(self.commander_surf.image, self.commander_surf.rect.topleft)
+
                 print(self.deck[-1]['name'] + f' was the {self.deck_count + 1}th card added to the deck')
 
             pygame.display.update()
