@@ -48,7 +48,6 @@ class Game:
 
             self.display_surface.blit(card_img.image, card_img.rect.topleft)
 
-
         run = True
         while run:
             for event in pygame.event.get():
@@ -80,7 +79,7 @@ class Game:
 
     def run(self):
         while True:
-            
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -98,7 +97,7 @@ class Game:
                 print(self.deck)
                 self.state = 'nonland_choice'
 
-            elif self.state == 'nonland_choice' and self.deck_count < 62:
+            elif self.state == 'nonland_choice' and self.deck_count < 60 - 24:
                 self.present_choices(self.picker.get_nonlands(self.color_identity))
                 self.deck.append(self.choice)
                 print(self.deck[-1]['name'] + f' was the {self.deck_count + 1}th card added to the deck')
