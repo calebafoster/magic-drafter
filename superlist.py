@@ -44,5 +44,7 @@ class SuperList:
 
 
 if __name__ == "__main__":
-    s = SuperList('commander-oracle-cards.json')
-    pprint.pprint(s.card_lookup('Gray Slaad // Entropic Decay'))
+#    s = SuperList('commander-oracle-cards.json')
+#    pprint.pprint(s.card_lookup('Gray Slaad // Entropic Decay'))
+    s = SuperList('oracle-cards.json')
+    s.write_json('commander-oracle-cards.json', s.commander_cards(s.loaded_list))
