@@ -40,6 +40,7 @@ class SuperList:
                 print(f"{obj["name"]} is legal")
                 legals.append(obj)
 
+        print(len(legals))
         return legals
 
 
