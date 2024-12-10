@@ -3,6 +3,7 @@ import sys
 from picker import Picker
 from card import Card
 
+
 class Game:
     def __init__(self):
         pygame.init()
@@ -11,75 +12,94 @@ class Game:
         self.clock = pygame.time.Clock()
 
         self.state = 'commander_choice'
+        self.can_choose = False
 
         self.picker = Picker('commander-oracle-cards.json')
-        self.commander_surf = None
+        self.commander = None
 
         self.choice = None
         self.deck = []
         self.deck_count = 0
         self.color_identity = ['W','U','B','R','G']
 
-    def present_choices(self, choices):
-        prev_x = 0
-        prev_y = 0
+        self.card_group = pygame.sprite.Group()
+        self.choices = pygame.sprite.Group()
+
+    def create_choices(self, choices):
         sprite_group = []
+        prev_card = None
 
         for index, card in enumerate(choices):
+            sprite_group.append(Card((0, 0), card, self.card_group))
             print(f"{index + 1}. {card['name']}")
-            image = None
 
-            if 'card_faces' in card and 'image_uris' not in card:
-                image = card['card_faces'][0]['image_uris']['png']
+        for index, card in enumerate(sprite_group):
+            if index == 0:
+                prev_card = card
+                continue
+            elif index == 3:
+                card.rect.topleft = sprite_group[0].rect.bottomleft
+                prev_card = card
             else:
-                image = card['image_uris']['png']
+                card.rect.topleft = prev_card.rect.topright
+                prev_card = card
 
-            if index <= 2:
-                card_img = Card((prev_x,0), image)
-                prev_x = card_img.rect.right
-                prev_y = card_img.rect.bottom
-                sprite_group.append(card_img)
-            if index == 2:
-                prev_x = 0
+        self.choices.add(sprite_group)
 
-            if index > 2:
-                card_img = Card((prev_x,prev_y), image)
-                prev_x = card_img.rect.right
-                sprite_group.append(card_img)
+    def choose_card(self):
+        self.can_choose = False
 
-            self.display_surface.blit(card_img.image, card_img.rect.topleft)
+        for card in self.choices:
+            if card.is_clicked():
+                print(f"{card.name} was chosen")
+                self.choice = card
 
-            if self.commander_surf:
-                self.display_surface.blit(self.commander_surf.image, self.commander_surf.rect.topleft)
+    def choice_sanity(self):
+        if not pygame.mouse.get_pressed()[0]:
+            self.can_choose = True
 
-        run = True
-        while run:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
+    def cleanup(self):
+        for card in self.choices:
+            if not card.name == self.choice.name:
+                card.kill()
 
-                if event.type == pygame.KEYUP:
-                    if event.key == pygame.K_1:
-                        self.choice = choices[0]
-                        run = False
-                    if event.key == pygame.K_2:
-                        self.choice = choices[1]
-                        run = False
-                    if event.key == pygame.K_3:
-                        self.choice = choices[2]
-                        run = False
-                    if event.key == pygame.K_4:
-                        self.choice = choices[3]
-                        run = False
-                    if event.key == pygame.K_5:
-                        self.choice = choices[4]
-                        run = False
-                    if event.key == pygame.K_6:
-                        self.choice = choices[5]
-                        run = False
+        self.choice = None
+        self.choices.empty()
 
-            pygame.display.update()
+    def commander_choice(self):
+        if not self.choices:
+            choices = self.picker.get_commander_choices(6)
+            self.create_choices(choices)
+
+        self.choices.draw(self.display_surface)
+
+        self.choose_card()
+
+        if self.choice:
+            self.commander = self.choice
+            self.color_identity = self.commander.dict['color_identity']
+            self.commander.rect.topright = (1280, 0)
+
+            self.deck.append(self.choice)
+
+            self.state = 'nonland_choice'
+            self.cleanup()
+
+    def nonland_choices(self):
+        if not self.choices:
+            choices = self.picker.get_nonlands(self.color_identity)
+            self.create_choices(choices)
+
+        self.choices.draw(self.display_surface)
+        self.display_surface.blit(self.commander.image, self.commander.rect.topleft)
+
+        if self.can_choose:
+            self.choose_card()
+
+        if self.choice:
+            self.deck.append(self.choice)
+
+            self.cleanup()
 
     def run(self):
         while True:
@@ -91,29 +111,15 @@ class Game:
 
             self.display_surface.fill('black')
 
-
             self.deck_count = len(self.deck)
 
             if self.state == 'commander_choice':
-                self.present_choices(self.picker.get_commander_choices(6))
-                self.deck.append(self.choice)
-
-                self.commander = self.choice
-                self.commander_surf = Card((1000,0), self.choice['image_uris']['png'])
-
-                self.color_identity = self.choice['color_identity']
-
-                self.display_surface.blit(self.commander_surf.image, self.commander_surf.rect.topleft)
-
-                self.state = 'nonland_choice'
+                self.commander_choice()
 
             elif self.state == 'nonland_choice' and self.deck_count < 60 - 24:
-                self.present_choices(self.picker.get_nonlands(self.color_identity))
-                self.deck.append(self.choice)
+                self.nonland_choices()
 
-                self.display_surface.blit(self.commander_surf.image, self.commander_surf.rect.topleft)
-
-                print(self.deck[-1]['name'] + f' was the {self.deck_count + 1}th card added to the deck')
+            self.choice_sanity()
 
             pygame.display.update()
 
