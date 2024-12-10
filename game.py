@@ -2,6 +2,7 @@ import pygame
 import sys
 from picker import Picker
 from card import Card
+from button import Reroll
 
 
 class Game:
@@ -23,7 +24,10 @@ class Game:
         self.color_identity = ['W','U','B','R','G']
 
         self.card_group = pygame.sprite.Group()
+        self.menu_buttons = pygame.sprite.Group()
         self.choices = pygame.sprite.Group()
+
+        self.reroll_button = Reroll((0,0), self.menu_buttons)
 
     def create_choices(self, choices):
         sprite_group = []
@@ -44,6 +48,8 @@ class Game:
 
             self.choices.add(sprite_group[index])
             self.choices.draw(self.display_surface)
+            self.menu_buttons.update(self.choices)
+            self.menu_buttons.draw(self.display_surface)
 
             pygame.display.update()
 
@@ -54,6 +60,13 @@ class Game:
             if card.is_clicked():
                 print(f"{card.name} was chosen")
                 self.choice = card
+
+    def reroll(self):
+        self.can_choose = False
+
+        if self.reroll_button.is_clicked():
+            print("REROLL")
+            self.choices.empty()
 
     def choice_sanity(self):
         if not pygame.mouse.get_pressed()[0]:
@@ -73,8 +86,10 @@ class Game:
             self.create_choices(choices)
 
         self.choices.draw(self.display_surface)
+        self.menu_buttons.draw(self.display_surface)
 
         self.choose_card()
+        self.reroll()
 
         if self.choice:
             self.commander = self.choice
@@ -94,9 +109,11 @@ class Game:
 
         self.choices.draw(self.display_surface)
         self.display_surface.blit(self.commander.image, self.commander.rect.topleft)
+        self.menu_buttons.draw(self.display_surface)
 
         if self.can_choose:
             self.choose_card()
+            self.reroll()
 
         if self.choice:
             self.deck.append(self.choice)

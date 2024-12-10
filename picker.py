@@ -8,6 +8,7 @@ class Picker:
 
     def get_commander_choices(self, opt_num):
         choices = []
+        random.shuffle(self.loaded_list)
 
         for card in self.working.loaded_list:
             has_oracle = None
