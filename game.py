@@ -33,18 +33,19 @@ class Game:
             sprite_group.append(Card((0, 0), card, self.card_group))
             print(f"{index + 1}. {card['name']}")
 
-        for index, card in enumerate(sprite_group):
             if index == 0:
-                prev_card = card
-                continue
+                prev_card = sprite_group[index]
             elif index == 3:
-                card.rect.topleft = sprite_group[0].rect.bottomleft
-                prev_card = card
+                sprite_group[index].rect.topleft = sprite_group[0].rect.bottomleft
+                prev_card = sprite_group[index]
             else:
-                card.rect.topleft = prev_card.rect.topright
-                prev_card = card
+                sprite_group[index].rect.topleft = prev_card.rect.topright
+                prev_card = sprite_group[index]
 
-        self.choices.add(sprite_group)
+            self.choices.add(sprite_group[index])
+            self.choices.draw(self.display_surface)
+
+            pygame.display.update()
 
     def choose_card(self):
         self.can_choose = False
@@ -87,6 +88,7 @@ class Game:
 
     def nonland_choices(self):
         if not self.choices:
+            self.display_surface.blit(self.commander.image, self.commander.rect.topleft)
             choices = self.picker.get_nonlands(self.color_identity)
             self.create_choices(choices)
 
