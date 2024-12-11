@@ -29,6 +29,11 @@ class Game:
 
         self.reroll_button = Reroll((0,0), self.menu_buttons)
 
+    def display_oracle(self):
+        for card in self.card_group:
+            if card.is_hovering() and hasattr(card, 'oracle'):
+                card.oracle.draw_text(pygame.mouse.get_pos(), self.display_surface)
+
     def create_choices(self, choices):
         sprite_group = []
         prev_card = None
@@ -60,13 +65,14 @@ class Game:
             if card.is_clicked():
                 print(f"{card.name} was chosen")
                 self.choice = card
+                self.choice.rect.bottomright = (0,0)
 
     def reroll(self):
         self.can_choose = False
 
         if self.reroll_button.is_clicked():
             print("REROLL")
-            self.choices.empty()
+            self.cleanup()
 
     def choice_sanity(self):
         if not pygame.mouse.get_pressed()[0]:
@@ -74,7 +80,9 @@ class Game:
 
     def cleanup(self):
         for card in self.choices:
-            if not card.name == self.choice.name:
+            if hasattr(self.choice, 'name') and not card.name == self.choice.name:
+                card.kill()
+            elif not hasattr(self.choice, 'name'):
                 card.kill()
 
         self.choice = None
@@ -139,6 +147,8 @@ class Game:
                 self.nonland_choices()
 
             self.choice_sanity()
+
+            self.display_oracle()
 
             pygame.display.update()
 
