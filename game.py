@@ -3,6 +3,7 @@ import sys
 from picker import Picker
 from card import Card
 from button import Reroll
+from exporter import Exporter
 
 
 class Points(pygame.sprite.Sprite):
@@ -40,6 +41,8 @@ class Game:
 
         self.choice = None
         self.deck = []
+        self.deck_size = 60
+        self.max_lands = 24
         self.deck_count = 0
 
         self.points = Points((0,0))
@@ -108,11 +111,11 @@ class Game:
 
         if self.deck_count == 0:
             self.state = 'commander_choice'
-        elif self.deck_count >= 60 - 24 and self.points.num > 0:
+        elif self.deck_count >= self.deck_size - self.max_lands and self.points.num > 0 and not self.deck_count >= self.deck_size:
             self.state = 'land_choice'
-        elif self.deck_count < 60 - 24:
+        elif self.deck_count < self.deck_size - self.max_lands:
             self.state = 'nonland_choice'
-        elif self.deck_count >= 60:
+        elif self.deck_count >= self.deck_size or self.points.num <= 0:
             self.state = 'export_deck'
 
     def cleanup(self):
@@ -147,7 +150,7 @@ class Game:
 
             self.deck.append(self.choice)
 
-            self.state = 'nonland_choice'
+            self.state = 'export_deck'
             self.cleanup()
 
     def nonland_choices(self):
@@ -218,8 +221,8 @@ class Game:
                 self.land_choices()
 
             elif self.state == 'export_deck':
-                pygame.quit()
-                sys.exit()
+                self.exporter = Exporter(self.deck)
+                self.exporter.export()
 
             self.choice_sanity()
             self.state_sanity()

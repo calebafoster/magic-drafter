@@ -27,7 +27,7 @@ class Picker:
 
         return True
 
-    def set_rarities(self, rare_list):
+    def set_rarities(self, rare_list = ['c','u','r','m']):
         self.rarities = []
 
         if 'c' in rare_list:
