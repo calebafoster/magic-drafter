@@ -5,7 +5,7 @@ class Reroll(pygame.sprite.Sprite):
         super().__init__(groups)
         
         self.image = pygame.image.load('reroll.png').convert_alpha()
-        self.image = pygame.transform.scale_by(self.image, 0.5)
+        self.image = pygame.transform.scale_by(self.image, 0.33)
         self.rect = self.image.get_rect(topleft = pos)
         
         self.clicked = False

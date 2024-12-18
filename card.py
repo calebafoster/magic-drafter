@@ -14,6 +14,9 @@ class Text(pygame.sprite.Sprite):
     def generate_surfs(self):
         self.surf_list = []
         self.rect_list = []
+
+        self.text = self.text.replace(".)", ")")
+
         self.text = self.text.replace(".", "\n")
         lines = self.text.splitlines()
 
@@ -22,22 +25,6 @@ class Text(pygame.sprite.Sprite):
             rect = img.get_rect(topleft = (0,0))
             self.surf_list.append(img)
             self.rect_list.append(rect)
-
-#    def generate_rect(self):
-#        self.rect = None
-#        rect_list = []
-#        next_pos = (0,0)
-#
-#        for index, surf in enumerate(self.surf_list):
-#            if index == 0:
-#                self.rect = surf.get_rect(topleft = (0,0))
-#                next_pos = self.rect.bottomleft
-#            else:
-#                rect = surf.get_rect(topleft = next_pos)
-#                rect_list.append(rect)
-#                next_pos = rect.bottomleft
-#        
-#        self.rect.unionall(rect_list)
 
     def draw_text(self, pos, display_surface):
         next_pos = None

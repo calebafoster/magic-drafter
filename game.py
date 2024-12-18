@@ -5,6 +5,26 @@ from card import Card
 from button import Reroll
 
 
+class Points(pygame.sprite.Sprite):
+    def __init__(self, pos):
+        super().__init__()
+
+        self.num = 1
+        self.text = f"Points: {self.num}"
+        self.font = pygame.font.Font(None, 40)
+        self.image = self.font.render(self.text, True, 'white')
+        self.rect = self.image.get_rect(topleft = pos)
+
+    def draw(self, surface):
+        self.text = f"Points: {self.num}"
+        self.image = self.font.render(self.text, True, 'white')
+        self.rect = self.image.get_rect(topleft = self.rect.topleft)
+        surface.blit(self.image, self.rect.topleft)
+
+    def spend(self, number):
+        self.num = self.num - number
+
+
 class Game:
     def __init__(self):
         pygame.init()
@@ -21,7 +41,9 @@ class Game:
         self.choice = None
         self.deck = []
         self.deck_count = 0
-        self.color_identity = ['W','U','B','R','G']
+
+        self.points = Points((0,0))
+        self.points.rect.topright = (1280, 0)
 
         self.card_group = pygame.sprite.Group()
         self.menu_buttons = pygame.sprite.Group()
@@ -55,6 +77,7 @@ class Game:
             self.choices.draw(self.display_surface)
             self.menu_buttons.update(self.choices)
             self.menu_buttons.draw(self.display_surface)
+            self.points.draw(self.display_surface)
 
             pygame.display.update()
 
@@ -69,14 +92,28 @@ class Game:
 
     def reroll(self):
         self.can_choose = False
+        cost = 1
 
-        if self.reroll_button.is_clicked():
+        if self.reroll_button.is_clicked() and self.points.num >= cost:
             print("REROLL")
+            self.points.spend(cost)
             self.cleanup()
 
     def choice_sanity(self):
         if not pygame.mouse.get_pressed()[0]:
             self.can_choose = True
+
+    def state_sanity(self):
+        self.deck_count = len(self.deck)
+
+        if self.deck_count == 0:
+            self.state = 'commander_choice'
+        elif self.deck_count >= 60 - 24 and self.points.num > 0:
+            self.state = 'land_choice'
+        elif self.deck_count < 60 - 24:
+            self.state = 'nonland_choice'
+        elif self.deck_count >= 60:
+            self.state = 'export_deck'
 
     def cleanup(self):
         for card in self.choices:
@@ -95,14 +132,18 @@ class Game:
 
         self.choices.draw(self.display_surface)
         self.menu_buttons.draw(self.display_surface)
+        self.points.draw(self.display_surface)
 
         self.choose_card()
         self.reroll()
 
         if self.choice:
             self.commander = self.choice
-            self.color_identity = self.commander.dict['color_identity']
+            self.picker.color_identity = self.commander.dict['color_identity']
             self.commander.rect.topright = (1280, 0)
+            
+            self.points.rect.topright = self.commander.rect.topleft
+            self.points.num = 40
 
             self.deck.append(self.choice)
 
@@ -112,12 +153,15 @@ class Game:
     def nonland_choices(self):
         if not self.choices:
             self.display_surface.blit(self.commander.image, self.commander.rect.topleft)
-            choices = self.picker.get_nonlands(self.color_identity)
+            choices = self.picker.get_nonlands()
             self.create_choices(choices)
+
+        self.points.rect.topright = self.commander.rect.topleft
 
         self.choices.draw(self.display_surface)
         self.display_surface.blit(self.commander.image, self.commander.rect.topleft)
         self.menu_buttons.draw(self.display_surface)
+        self.points.draw(self.display_surface)
 
         if self.can_choose:
             self.choose_card()
@@ -125,6 +169,30 @@ class Game:
 
         if self.choice:
             self.deck.append(self.choice)
+
+            self.cleanup()
+
+    def land_choices(self):
+        self.picker.set_rarities(['u','r','m'])
+        if not self.choices:
+            self.display_surface.blit(self.commander.image, self.commander.rect.topleft)
+            choices = self.picker.get_lands()
+            self.create_choices(choices)
+
+        self.points.rect.topright = self.commander.rect.topleft
+
+        self.choices.draw(self.display_surface)
+        self.display_surface.blit(self.commander.image, self.commander.rect.topleft)
+        self.menu_buttons.draw(self.display_surface)
+        self.points.draw(self.display_surface)
+
+        if self.can_choose:
+            self.choose_card()
+            self.reroll()
+
+        if self.choice:
+            self.deck.append(self.choice)
+            self.points.spend(2)
 
             self.cleanup()
 
@@ -143,10 +211,18 @@ class Game:
             if self.state == 'commander_choice':
                 self.commander_choice()
 
-            elif self.state == 'nonland_choice' and self.deck_count < 60 - 24:
+            elif self.state == 'nonland_choice':
                 self.nonland_choices()
 
+            elif self.state == 'land_choice':
+                self.land_choices()
+
+            elif self.state == 'export_deck':
+                pygame.quit()
+                sys.exit()
+
             self.choice_sanity()
+            self.state_sanity()
 
             self.display_oracle()
 
