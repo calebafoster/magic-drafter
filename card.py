@@ -55,6 +55,8 @@ class Card(pygame.sprite.Sprite):
     def __init__(self, pos, card_dict, groups):
         super().__init__(groups)
 
+        self.state = 0
+
         self.dict = card_dict
         self.name = card_dict['name']
         if "oracle_text" in card_dict:
@@ -67,15 +69,25 @@ class Card(pygame.sprite.Sprite):
         self.pilimage = Image.open(BytesIO(self.rsp.content)).convert("RGBA")
         self.image = pygame.image.fromstring(self.pilimage.tobytes(), self.pilimage.size, self.pilimage.mode)
         self.image = pygame.transform.scale_by(self.image, 0.33)
+        self.images = [self.image]
+        if 'card_faces' in card_dict and 'image_uris' not in card_dict:
+            self.url = card_dict['card_faces'][1]['image_uris']['png']
+            self.rsp = requests.get(self.url)
+            self.pilimage = Image.open(BytesIO(self.rsp.content)).convert("RGBA")
+            image = pygame.image.fromstring(self.pilimage.tobytes(), self.pilimage.size, self.pilimage.mode)
+            image = pygame.transform.scale_by(image, 0.33)
+            self.images.append(image)
 
         self.rect = self.image.get_rect(topleft = pos)
         self.clicked = False
+        self.right_clicked = False
 
     def get_url(self, card_dict):
         url = None
 
         if 'card_faces' in card_dict and 'image_uris' not in card_dict:
             url = card_dict['card_faces'][0]['image_uris']['png']
+
         else:
             url = card_dict['image_uris']['png']
 
@@ -95,11 +107,35 @@ class Card(pygame.sprite.Sprite):
 
         return action
 
+    def is_right_clicked(self):
+        pos = pygame.mouse.get_pos()
+        action = False
+
+        if self.rect.collidepoint(pos):
+            if pygame.mouse.get_pressed()[2] and not self.right_clicked:
+                self.right_clicked = True
+                action = True
+
+        if not pygame.mouse.get_pressed()[2]:
+            self.right_clicked = False
+
+        return action
+
     def is_hovering(self):
         pos = pygame.mouse.get_pos()
 
         if self.rect.collidepoint(pos):
             return True
 
+    def state_check(self):
+        if self.is_right_clicked():
+            if self.state == 0:
+                self.state = 1
+            else:
+                self.state = 0
+
+        self.image = self.images[self.state]
+
     def update(self):
-        pass
+        if len(self.images) > 1:
+            self.state_check()

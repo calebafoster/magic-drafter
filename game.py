@@ -222,12 +222,15 @@ class Game:
 
             elif self.state == 'export_deck':
                 self.exporter = Exporter(self.deck)
+                self.exporter.basics_fill(self.deck_size)
                 self.exporter.export()
 
             self.choice_sanity()
             self.state_sanity()
 
             self.display_oracle()
+
+            self.card_group.update()
 
             pygame.display.update()
 

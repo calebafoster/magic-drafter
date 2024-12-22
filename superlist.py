@@ -46,4 +46,4 @@ class SuperList:
 
 if __name__ == "__main__":
     s = SuperList('commander-oracle-cards.json')
-    pprint.pprint(s.card_lookup('Swamp'))
+    pprint.pprint(s.card_lookup('Expansion // Explosion'))
