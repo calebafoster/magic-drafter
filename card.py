@@ -4,11 +4,11 @@ import requests
 from PIL import Image
 
 class Text(pygame.sprite.Sprite):
-    def __init__(self, text):
+    def __init__(self, text, size = 20):
         super().__init__()
 
         self.text = text
-        self.font = pygame.font.Font(None, 20)
+        self.font = pygame.font.Font(None, size)
         self.generate_surfs()
 
     def generate_surfs(self):

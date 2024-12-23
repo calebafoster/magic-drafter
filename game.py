@@ -1,8 +1,8 @@
 import pygame
 import sys
 from picker import Picker
-from card import Card
-from button import Reroll
+from card import Card, Text
+from button import Reroll, Stats, Draft
 from exporter import Exporter
 
 
@@ -34,6 +34,7 @@ class Game:
         self.clock = pygame.time.Clock()
 
         self.state = 'commander_choice'
+        self.previous_state = ''
         self.can_choose = False
 
         self.picker = Picker('commander-oracle-cards.json')
@@ -45,14 +46,19 @@ class Game:
         self.max_lands = 24
         self.deck_count = 0
 
+        self.stats = None
+
         self.points = Points((0,0))
         self.points.rect.topright = (1280, 0)
 
         self.card_group = pygame.sprite.Group()
         self.menu_buttons = pygame.sprite.Group()
         self.choices = pygame.sprite.Group()
+        self.all_buttons = pygame.sprite.Group()
 
         self.reroll_button = Reroll((0,0), self.menu_buttons)
+        self.stats_button = Stats((0,0), self.menu_buttons)
+        self.draft_button = Draft((0,0), self.all_buttons)
 
     def display_oracle(self):
         for card in self.card_group:
@@ -78,7 +84,7 @@ class Game:
 
             self.choices.add(sprite_group[index])
             self.choices.draw(self.display_surface)
-            self.menu_buttons.update(self.choices)
+            self.menu_buttons.update(self.choices, self.commander)
             self.menu_buttons.draw(self.display_surface)
             self.points.draw(self.display_surface)
 
@@ -102,6 +108,16 @@ class Game:
             self.points.spend(cost)
             self.cleanup()
 
+    def stats_pressed(self):
+        self.can_choose = False
+        
+        if self.stats_button.is_clicked():
+            self.state = 'stats_page'
+
+    def draft_pressed(self):
+        if self.draft_button.is_clicked():
+            return True
+
     def choice_sanity(self):
         if not pygame.mouse.get_pressed()[0]:
             self.can_choose = True
@@ -112,10 +128,13 @@ class Game:
         if self.deck_count == 0:
             self.state = 'commander_choice'
         elif self.deck_count >= self.deck_size - self.max_lands and self.points.num > 0 and not self.deck_count >= self.deck_size:
+            self.previous_state = self.state
             self.state = 'land_choice'
         elif self.deck_count < self.deck_size - self.max_lands:
+            self.previous_state = self.state
             self.state = 'nonland_choice'
         elif self.deck_count >= self.deck_size or self.points.num <= 0:
+            self.previous_state = self.state
             self.state = 'export_deck'
 
     def cleanup(self):
@@ -150,7 +169,8 @@ class Game:
 
             self.deck.append(self.choice)
 
-            self.state = 'export_deck'
+            self.previous_state = 'commander_choice'
+            self.state = 'nonland_choice'
             self.cleanup()
 
     def nonland_choices(self):
@@ -169,6 +189,7 @@ class Game:
         if self.can_choose:
             self.choose_card()
             self.reroll()
+            self.stats_pressed()
 
         if self.choice:
             self.deck.append(self.choice)
@@ -192,12 +213,71 @@ class Game:
         if self.can_choose:
             self.choose_card()
             self.reroll()
+            self.stats_pressed()
 
         if self.choice:
             self.deck.append(self.choice)
             self.points.spend(2)
 
             self.cleanup()
+
+    def stats_page(self):
+        if not self.stats:
+            types = []
+            type_dict = {}
+            text = ''
+
+            for card in self.deck:
+                type_line = card.dict['type_line'].split(' — ')[0]
+
+                if 'card_faces' in card.dict:
+                    temp = type_line.split(' // ')
+                    type_line = ' '.join(temp)
+
+                type_list = type_line.split(' ')
+
+                for card_type in type_list:
+                    types.append(card_type)
+
+            for typ in types:
+                if typ not in type_dict:
+                    type_dict[typ] = 1
+                else:
+                    type_dict[typ] += 1
+
+            for key, value in type_dict.items():
+                text += f"{key}: {value}\n"
+
+            self.stats = Text(text, 40)
+            self.stats.generate_surfs()
+
+            for card in self.choices:
+                card.rect.bottomright = (0,0)
+
+        self.draft_button.update(self.choices, self.commander)
+
+        self.stats.draw_text((0,0), self.display_surface)
+        self.display_surface.blit(self.commander.image, self.commander.rect.topleft)
+        self.display_surface.blit(self.draft_button.image, self.draft_button.rect.topleft)
+        
+        if self.draft_pressed() and self.can_choose:
+            self.state = self.previous_state
+            self.stats = None
+
+            prev_card = None
+            anchor_pos = None
+            for index, card in enumerate(self.choices):
+            
+                if index == 0:
+                    card.rect.topleft = (0,0)
+                    anchor_pos = card.rect.bottomleft
+                    prev_card = card
+                elif index == 3:
+                    card.rect.topleft = anchor_pos
+                    prev_card = card
+                else:
+                    card.rect.topleft = prev_card.rect.topright
+                    prev_card = card
 
     def run(self):
         while True:
@@ -220,13 +300,17 @@ class Game:
             elif self.state == 'land_choice':
                 self.land_choices()
 
+            elif self.state == 'stats_page':
+                self.stats_page()
+
             elif self.state == 'export_deck':
                 self.exporter = Exporter(self.deck)
                 self.exporter.basics_fill(self.deck_size)
                 self.exporter.export()
 
             self.choice_sanity()
-            self.state_sanity()
+            if self.state != 'stats_page':
+                self.state_sanity()
 
             self.display_oracle()
 
