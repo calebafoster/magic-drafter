@@ -225,7 +225,7 @@ class Game:
         if not self.stats:
             types = []
             type_dict = {}
-            text = ''
+            types_text = f"Total Deck Count: {self.deck_count}\n"
 
             for card in self.deck:
                 type_line = card.dict['type_line'].split(' — ')[0]
@@ -246,9 +246,10 @@ class Game:
                     type_dict[typ] += 1
 
             for key, value in type_dict.items():
-                text += f"{key}: {value}\n"
+                types_text += f"{key}: {value}\n"
 
-            self.stats = Text(text, 40)
+
+            self.stats = Text(types_text, 40)
             self.stats.generate_surfs()
 
             for card in self.choices:
