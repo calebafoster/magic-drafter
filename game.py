@@ -48,8 +48,8 @@ class Game:
 
         self.choice = None
         self.deck = []
-        self.deck_size = 10
-        self.max_lands = 8
+        self.deck_size = 60
+        self.max_lands = 24
         self.deck_count = 0
 
         self.stats = None
@@ -171,7 +171,7 @@ class Game:
             self.commander.rect.topright = (1280, 0)
             
             self.points.rect.topright = self.commander.rect.topleft
-            self.points.num = 9
+            self.points.num = 40
 
             self.deck.append(self.choice)
 
