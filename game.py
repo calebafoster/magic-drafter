@@ -22,6 +22,12 @@ class Points(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(topleft = self.rect.topleft)
         surface.blit(self.image, self.rect.topleft)
 
+    def validate(self, number):
+        if self.num < number:
+            return False
+        elif self.num >= number:
+            return True
+
     def spend(self, number):
         self.num = self.num - number
 
@@ -42,8 +48,8 @@ class Game:
 
         self.choice = None
         self.deck = []
-        self.deck_size = 60
-        self.max_lands = 24
+        self.deck_size = 10
+        self.max_lands = 8
         self.deck_count = 0
 
         self.stats = None
@@ -165,7 +171,7 @@ class Game:
             self.commander.rect.topright = (1280, 0)
             
             self.points.rect.topright = self.commander.rect.topleft
-            self.points.num = 40
+            self.points.num = 9
 
             self.deck.append(self.choice)
 
@@ -210,16 +216,18 @@ class Game:
         self.menu_buttons.draw(self.display_surface)
         self.points.draw(self.display_surface)
 
-        if self.can_choose:
+        if self.can_choose and self.points.validate(2):
             self.choose_card()
             self.reroll()
             self.stats_pressed()
 
-        if self.choice:
+        if self.choice and self.points.validate(2):
             self.deck.append(self.choice)
             self.points.spend(2)
 
             self.cleanup()
+        elif not self.points.validate(2):
+            self.points.num = 0
 
     def stats_page(self):
         if not self.stats:

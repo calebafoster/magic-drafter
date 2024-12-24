@@ -37,7 +37,7 @@ class SuperList:
 
         for obj in obj_list:
             if obj["legalities"]["commander"] == "legal":
-                print(f"{obj["name"]} is legal")
+                print(f"{obj['name']} is legal")
                 legals.append(obj)
 
         print(len(legals))
