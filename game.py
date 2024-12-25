@@ -216,18 +216,19 @@ class Game:
         self.menu_buttons.draw(self.display_surface)
         self.points.draw(self.display_surface)
 
-        if self.can_choose and self.points.validate(2):
+        if not self.points.validate(2):
+            self.points.num = 0
+
+        if self.can_choose:
             self.choose_card()
             self.reroll()
             self.stats_pressed()
 
-        if self.choice and self.points.validate(2):
+        if self.choice:
             self.deck.append(self.choice)
             self.points.spend(2)
 
             self.cleanup()
-        elif not self.points.validate(2):
-            self.points.num = 0
 
     def stats_page(self):
         if not self.stats:
