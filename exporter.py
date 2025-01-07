@@ -21,4 +21,7 @@ class Exporter:
 
     def basics_fill(self, deck_length):
         for i in range(deck_length - len(self.deck)):
-            self.string += f"1 {map[self.color_identity[i % len(self.color_identity)]]}\n"
+            if len(self.color_identity):
+                self.string += f"1 {map[self.color_identity[i % len(self.color_identity)]]}\n"
+            else:
+                self.string += "1 Wastes"
