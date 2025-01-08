@@ -25,4 +25,4 @@ class Exporter:
             if len(self.color_identity):
                 self.string += f"1 {map[self.color_identity[i % len(self.color_identity)]]}\n"
             else:
-                self.string += "1 Wastes"
+                self.string += "1 Wastes\n"
