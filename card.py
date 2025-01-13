@@ -66,16 +66,14 @@ class Card(pygame.sprite.Sprite):
         self.url = self.get_url(card_dict)
 
         self.rsp = requests.get(self.url)
-        self.pilimage = Image.open(BytesIO(self.rsp.content)).convert("RGBA")
+        self.pilimage = Image.open(BytesIO(self.rsp.content)).convert("RGBA").resize((245, 346))
         self.image = pygame.image.fromstring(self.pilimage.tobytes(), self.pilimage.size, self.pilimage.mode)
-        self.image = pygame.transform.scale_by(self.image, 0.33)
         self.images = [self.image]
         if 'card_faces' in card_dict and 'image_uris' not in card_dict:
             self.url = card_dict['card_faces'][1]['image_uris']['png']
             self.rsp = requests.get(self.url)
-            self.pilimage = Image.open(BytesIO(self.rsp.content)).convert("RGBA")
+            self.pilimage = Image.open(BytesIO(self.rsp.content)).convert("RGBA").resize((245, 346))
             image = pygame.image.fromstring(self.pilimage.tobytes(), self.pilimage.size, self.pilimage.mode)
-            image = pygame.transform.scale_by(image, 0.33)
             self.images.append(image)
 
         self.rect = self.image.get_rect(topleft = pos)
