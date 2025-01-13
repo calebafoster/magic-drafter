@@ -1,10 +1,16 @@
 import json
 import random
-import time
+import os
 import pprint
+import update
 
 class SuperList:
     def __init__(self, path):
+        if not os.path.isfile(path):
+            update.download_oracle_cards()
+            loaded = update.get_json('oracle-cards.json')
+            update.write_json('commander-oracle-cards.json', update.commander_cards(loaded))
+
         self.loaded_list = self.get_json(path)
         random.shuffle(self.loaded_list)
 
