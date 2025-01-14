@@ -257,7 +257,6 @@ class Game:
             for key, value in type_dict.items():
                 types_text += f"{key}: {value}\n"
 
-
             self.stats = Text(types_text, 40)
             self.stats.generate_surfs()
 
